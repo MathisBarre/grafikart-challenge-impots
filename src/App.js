@@ -2,9 +2,9 @@ import React, {useState, useEffect} from "react";
 import "./styles.css";
 
 export default function App() {
-  const [netTaxableIncome, setRevenusNetImposable] = useState(localStorage.getItem("netTaxableIncome"))
-  const [married, setMarried] = useState(localStorage.getItem("married"))
-  const [nbChild, setNbChild] = useState(localStorage.getItem("nbChild"))
+  const [netTaxableIncome, setRevenusNetImposable] = useState(localStorage.getItem("netTaxableIncome") || 0)
+  const [married, setMarried] = useState(((localStorage.getItem("married") === "true") ? true : false))
+  const [nbChild, setNbChild] = useState(localStorage.getItem("nbChild") || 0)
   const [impot, setImpot] = useState({total:0,slice:[0,0,0,0,0]})
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function App() {
 
     localStorage.setItem("netTaxableIncome", netTaxableIncome)
     localStorage.setItem("impot", impot)
-    localStorage.setItem("married", (married === true) ? "true" : "")
+    localStorage.setItem("married", married)
     localStorage.setItem("nbChild", nbChild)
   }, [netTaxableIncome, married, nbChild, impot])
 
