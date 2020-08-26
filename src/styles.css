@@ -1,4 +1,13 @@
 .App {
   font-family: sans-serif;
-  text-align: center;
+  text-align: left;
+}
+
+td, th {
+  border: black 1px solid;
+  padding: 8px;
+}
+
+th {
+  background-color: aqua;
 }
