@@ -7,9 +7,6 @@ export default function App() {
   const [nbChild, setNbChild] = useState(localStorage.getItem("nbChild"))
   const [impot, setImpot] = useState({total:0,slice:[0,0,0,0,0]})
 
-  const limSupBySlice = [10064, 25659, 73369, 157806, Infinity]
-  const percentTaxeBySlice = [0,0.11,0.30,0.41,0.45]
-
   useEffect(() => {
     console.group("App state")
     console.log(netTaxableIncome)
@@ -26,6 +23,8 @@ export default function App() {
 
   useEffect(() => {
     //* Slice = Tranches d'impositions (commence à 0)
+    const limSupBySlice = [10064, 25659, 73369, 157806, Infinity]
+    const percentTaxeBySlice = [0,0.11,0.30,0.41,0.45]
     let tmpImpot = {total:0,slice:[0,0,0,0,0]}
     let sliceMax = 0
     
