@@ -7,6 +7,9 @@ export default function App() {
   const [nbChild, setNbChild] = useState(localStorage.getItem("nbChild"))
   const [impot, setImpot] = useState({total:0,slice:[0,0,0,0,0]})
 
+  const limSupBySlice = [10064, 25659, 73369, 157806, Infinity]
+  const percentTaxeBySlice = [0,0.11,0.30,0.41,0.45]
+
   useEffect(() => {
     console.group("App state")
     console.log(netTaxableIncome)
@@ -23,8 +26,6 @@ export default function App() {
 
   useEffect(() => {
     //* Slice = Tranches d'impositions (commence à 0)
-    const limSupBySlice = [10064, 25659, 73369, 157806, Infinity]
-    const percentTaxeBySlice = [0,0.11,0.30,0.41,0.45]
     let tmpImpot = {total:0,slice:[0,0,0,0,0]}
     let sliceMax = 0
     
@@ -46,7 +47,6 @@ export default function App() {
     //* On calcule la dernière tranche qui n'est pas remplie
     tmpImpot.slice[sliceMax] = (netTaxableIncomeAfterFQ - limSupBySlice[sliceMax-1]) * (percentTaxeBySlice[sliceMax])
 
-    
     //* On additionne toutes les tranches et on multiplie par le quotient familiale
     tmpImpot.total = Math.round((tmpImpot.slice[1] + tmpImpot.slice[2] + tmpImpot.slice[3] + tmpImpot.slice[4]) * familyQuotient)
 
@@ -66,15 +66,36 @@ export default function App() {
         <form className="form">
           <label className="label">
             Votre revenus net imposable sur une année : 
-            <input className="input inputNumber" type="number" name="netTaxable" id="netTaxable" value={netTaxableIncome} onChange={(event) => setRevenusNetImposable(event.target.value)} />
+            <input 
+              className="input inputNumber" 
+              type="number" 
+              name="netTaxable" 
+              id="netTaxable" 
+              value={netTaxableIncome} 
+              onChange={(event) => setRevenusNetImposable(event.target.value)} 
+            />
           </label><br/>
           <label className={`label labelCheckbox ${ married ? "checked" : "" }`}>
-            <input className="input inputCheckbox" type="checkbox" name="married" id="married" checked={married} onChange={(event) => {setMarried(event.target.checked);}}/>
+            <input 
+              className="input inputCheckbox" 
+              type="checkbox" 
+              name="married" 
+              id="married" 
+              checked={married} 
+              onChange={(event) => {setMarried(event.target.checked);}}
+            />
             Pacsé / marié ?
           </label><br/>
           <label className="label">
             Nombre d'enfant :
-            <input className="input inputNumber" type="number" name="nbChilds" id="nbChilds" value={nbChild} onChange={(event) => setNbChild(event.target.value)}/>
+            <input 
+              className="input inputNumber" 
+              type="number" 
+              name="nbChilds" 
+              id="nbChilds" 
+              value={nbChild} 
+              onChange={(event) => setNbChild(event.target.value)}
+            />
           </label>
         </form>
         <div className="result">
@@ -93,6 +114,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
+              {/* Peut être optimisé : */}
               <tr>
                 <td>1</td>
                 <td>0€ - 10 064€</td>
