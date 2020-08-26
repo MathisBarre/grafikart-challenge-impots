@@ -9,6 +9,7 @@ body {
 .App {
   margin: auto;
   max-width: 64rem;
+  padding-bottom: 2rem;
 }
 
 .title {
