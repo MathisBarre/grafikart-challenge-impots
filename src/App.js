@@ -2,12 +2,24 @@ import React, {useState, useEffect} from "react";
 import "./styles.css";
 
 export default function App() {
-  const [netTaxableIncome, setRevenusNetImposable] = useState(0)
+  const [netTaxableIncome, setRevenusNetImposable] = useState(localStorage.getItem("netTaxableIncome"))
+  const [married, setMarried] = useState(localStorage.getItem("married"))
+  const [nbChild, setNbChild] = useState(localStorage.getItem("nbChild"))
   const [impot, setImpot] = useState({total:0,slice:[0,0,0,0,0]})
 
-  function handleChange(event) {
-    setRevenusNetImposable(event.target.value)
-  }
+  useEffect(() => {
+    console.group("App state")
+    console.log(netTaxableIncome)
+    console.log(impot)
+    console.log(married)
+    console.log(nbChild)
+    console.groupEnd()
+
+    localStorage.setItem("netTaxableIncome", netTaxableIncome)
+    localStorage.setItem("impot", impot)
+    localStorage.setItem("married", (married === true) ? "true" : "")
+    localStorage.setItem("nbChild", nbChild)
+  }, [netTaxableIncome, married, nbChild, impot])
 
   useEffect(() => {
     //* Slice = Tranches d'impositions (commence à 0)
@@ -15,77 +27,106 @@ export default function App() {
     const percentTaxeBySlice = [0,0.11,0.30,0.41,0.45]
     let tmpImpot = {total:0,slice:[0,0,0,0,0]}
     let sliceMax = 0
-    if (netTaxableIncome > 10064) sliceMax++ //1
-    if (netTaxableIncome > 25659) {
-      tmpImpot.slice[sliceMax] = (25659-10064)*(11/100)
-      sliceMax++ //2
+    
+    //* Niveau 2 : Quotient familiale 
+    let familyQuotient = married ? 2 : 1
+    if (nbChild <= 2 && nbChild > 0) familyQuotient += nbChild * 0.5
+    if (nbChild > 2) familyQuotient += nbChild - 2
+    let netTaxableIncomeAfterFQ = netTaxableIncome / familyQuotient
+    
+    //* Pour chaque tranches, si elle est "pleine" (revenus au dessus de la limite sup de la tranche), on stocke l'impot de la tranche dans un tableau
+    for (let i = 0 ; i < 4 ; i++) {
+      if (netTaxableIncomeAfterFQ > limSupBySlice[sliceMax])  {
+        const lastLimSupBySlice = (limSupBySlice[sliceMax-1]) ? limSupBySlice[sliceMax-1] : 0 // Évite une erreur à la première itération (limSupBySlice[sliceMax-1] n'existe pas)
+        tmpImpot.slice[sliceMax] = (limSupBySlice[sliceMax] - lastLimSupBySlice) * percentTaxeBySlice[sliceMax]
+        sliceMax++
+      }
     }
-    if (netTaxableIncome > 73369) {
-      tmpImpot.slice[sliceMax] = (73369-25659)*(30/100)
-      sliceMax++ //3
-    }
-    if (netTaxableIncome > 157806) {
-      tmpImpot.slice[sliceMax] = (157806-73369)*(41/100)
-      sliceMax++ //4
-    }
-    tmpImpot.slice[sliceMax] = (netTaxableIncome - limSupBySlice[sliceMax-1]) * (percentTaxeBySlice[sliceMax]) 
-    tmpImpot.total = Math.round(tmpImpot.slice[1] + tmpImpot.slice[2] + tmpImpot.slice[3] + tmpImpot.slice[4])
+
+    //* On calcule la dernière tranche qui n'est pas remplie
+    tmpImpot.slice[sliceMax] = (netTaxableIncomeAfterFQ - limSupBySlice[sliceMax-1]) * (percentTaxeBySlice[sliceMax])
+
+    
+    //* On additionne toutes les tranches et on multiplie par le quotient familiale
+    tmpImpot.total = Math.round((tmpImpot.slice[1] + tmpImpot.slice[2] + tmpImpot.slice[3] + tmpImpot.slice[4]) * familyQuotient)
+
+    //* On corrige les taxes par tranches (faussés par le quotient familiale) et on les arrondis
+    tmpImpot.slice = tmpImpot.slice.map((slice) => Math.round(slice * familyQuotient ) )
+
     setImpot(tmpImpot)
-  }, [netTaxableIncome])
+
+  }, [netTaxableIncome, married, nbChild])
 
   return (
-    <div className="App">
-      <h1>Calcule impôt sur le revenue net imposable<br/>applicable aux revenus 2020 pour un célibataire sans enfants</h1>
-      <form>
-        <label>
-          Votre revenus net imposable sur une année entière : 
-          <input type="number" name="netTaxable" id="netTaxable" value={netTaxableIncome} onChange={handleChange} />
-        </label><br/>
-      </form>
-      <p>Vous devrez payer {impot.total}€ impôts</p>
-      <p>Ce qui revient à {impot.total} * 100 / {netTaxableIncome} = {(impot.total * 100 / netTaxableIncome) ? Math.round(impot.total * 100 / netTaxableIncome) : 0}% de vos revenus net imposable</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Tranches</th>
-            <th>Montants des revenus</th>
-            <th>Imposition</th>
-            <th>Impot payé</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>0€ - 10 064€</td>
-            <td>0%</td>
-            <td>0€</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>10 064€ - 25 659€</td>
-            <td>11%</td>
-            <td>{impot.slice[1]}€</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>25 659€ - 73 369€</td>
-            <td>30%</td>
-            <td>{impot.slice[2]}€</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>73 369€ - 157 806€</td>
-            <td>41%</td>
-            <td>{impot.slice[3]}€</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>157 806€ - Infinity</td>
-            <td>45%</td>
-            <td>{impot.slice[4]}€</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <main>
+      <div className="title">
+        <h1>Calcule impôt sur le revenue net imposable <br/><span className="subtitle">applicable aux revenus 2020</span> </h1>
+      </div>
+      <div className="App">
+        <form className="form">
+          <label className="label">
+            Votre revenus net imposable sur une année : 
+            <input className="input inputNumber" type="number" name="netTaxable" id="netTaxable" value={netTaxableIncome} onChange={(event) => setRevenusNetImposable(event.target.value)} />
+          </label><br/>
+          <label className={`label labelCheckbox ${ married ? "checked" : "" }`}>
+            <input className="input inputCheckbox" type="checkbox" name="married" id="married" checked={married} onChange={(event) => {setMarried(event.target.checked);}}/>
+            Pacsé / marié ?
+          </label><br/>
+          <label className="label">
+            Nombre d'enfant :
+            <input className="input inputNumber" type="number" name="nbChilds" id="nbChilds" value={nbChild} onChange={(event) => setNbChild(event.target.value)}/>
+          </label>
+        </form>
+        <div className="result">
+          <h2>Votre estimation :</h2>
+          <p>L'impôt sur le revenu s'élèvera à : <strong>{impot.total}€</strong></p>
+          <p>Ce qui correspond à <strong>{(impot.total * 100 / netTaxableIncome) ? Math.round(impot.total * 100 / netTaxableIncome) : 0}%</strong> de vos revenus</p>
+          <p>Il vous restera <strong>{ netTaxableIncome - impot.total}€</strong> net d'impôts</p>
+          <h2>Détail par tranche d'imposition : </h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Tranches</th>
+                <th>Montants des revenus</th>
+                <th>Imposition</th>
+                <th>Impot payé</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>0€ - 10 064€</td>
+                <td>0%</td>
+                <td>0€</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>10 064€ - 25 659€</td>
+                <td>11%</td>
+                <td>{impot.slice[1]}€</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>25 659€ - 73 369€</td>
+                <td>30%</td>
+                <td>{impot.slice[2]}€</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>73 369€ - 157 806€</td>
+                <td>41%</td>
+                <td>{impot.slice[3]}€</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>157 806€ - Infinity</td>
+                <td>45%</td>
+                <td>{impot.slice[4]}€</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
   );
 }
