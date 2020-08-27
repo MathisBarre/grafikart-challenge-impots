@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from "react";
+import ReactTooltip from 'react-tooltip';
 import "./styles.css";
 
 export default function App() {
@@ -101,7 +102,7 @@ export default function App() {
           <h2>Votre estimation :</h2>
           <p>L'impôt sur le revenu s'élèvera à : <strong>{impot.total}€</strong></p>
           <p>Ce qui correspond à <strong>{(impot.total * 100 / netTaxableIncome) ? Math.round(impot.total * 100 / netTaxableIncome) : 0}%</strong> de vos revenus</p>
-          <p>Il vous restera <strong>{ netTaxableIncome - impot.total}€</strong> net d'impôts</p>
+          <p>Il vous restera <strong>{ netTaxableIncome - impot.total}€</strong> "net d'impôts" <span className="help" data-tip="La somme &quot;net d'impôt&quot; est la somme restante après avoir payé l'impôt sur le revenu">?</span></p>
           <h2>Détail par tranche d'imposition : </h2>
           <table>
             <thead>
@@ -116,31 +117,31 @@ export default function App() {
               {/* Peut être optimisé : */}
               <tr>
                 <td>1</td>
-                <td>0€ - 10 064€</td>
+                <td>0€ - 10.064€</td>
                 <td>0%</td>
                 <td>0€</td>
               </tr>
               <tr>
                 <td>2</td>
-                <td>10 064€ - 25 659€</td>
+                <td>10 064€ - 25.659€</td>
                 <td>11%</td>
                 <td>{impot.slice[1]}€</td>
               </tr>
               <tr>
                 <td>3</td>
-                <td>25 659€ - 73 369€</td>
+                <td>25 659€ - 73.369€</td>
                 <td>30%</td>
                 <td>{impot.slice[2]}€</td>
               </tr>
               <tr>
                 <td>4</td>
-                <td>73 369€ - 157 806€</td>
+                <td>73 369€ - 157.806€</td>
                 <td>41%</td>
                 <td>{impot.slice[3]}€</td>
               </tr>
               <tr>
                 <td>5</td>
-                <td>157 806€ - Infinity</td>
+                <td>157.806€ - Infinity</td>
                 <td>45%</td>
                 <td>{impot.slice[4]}€</td>
               </tr>
@@ -148,6 +149,7 @@ export default function App() {
           </table>
         </div>
       </div>
+      <ReactTooltip />
     </main>
   );
 }
