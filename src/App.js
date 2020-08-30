@@ -32,7 +32,7 @@ export default function App() {
     //* Niveau 2 : Quotient familiale 
     let familyQuotient = married ? 2 : 1
     if (nbChild <= 2 && nbChild > 0) familyQuotient += nbChild * 0.5
-    if (nbChild > 2) familyQuotient += nbChild - 2
+    if (nbChild > 2) familyQuotient += nbChild - 1
     let netTaxableIncomeAfterFQ = netTaxableIncome / familyQuotient
     
     //* Pour chaque tranches, si elle est "pleine" (revenus au dessus de la limite sup de la tranche), on stocke l'impot de la tranche dans un tableau
